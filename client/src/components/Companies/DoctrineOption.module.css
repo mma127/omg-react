@@ -1,0 +1,69 @@
+.DoctrineOption {
+    height: 120px;
+    width: 240px;
+}
+
+.DoctrineOption input {
+    margin: 0;
+    padding: 0;
+    appearance: none;
+}
+.DoctrineOption label {
+    height: 120px;
+    cursor: pointer;
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: inline-block;
+    filter: brightness(1.8) grayscale(1) opacity(.7);
+}
+.DoctrineOption label:hover {
+    filter: brightness(1.2) grayscale(.5) opacity(.9);
+}
+
+.DoctrineOption label:before,
+.DoctrineOption label:after {
+    content: none !important;
+    opacity: 0 !important;
+}
+
+.DoctrineOption:global(.checked) label {
+    filter: none;
+}
+
+.DoctrineOption.Airborne label{
+    background-image: url('../../assets/factions/doctrines/banners/airborne.png');
+}
+.DoctrineOption.Armor label{
+    background-image: url('../../assets/factions/doctrines/banners/armor.png');
+}
+.DoctrineOption.Infantry label{
+    background-image: url('../../assets/factions/doctrines/banners/infantry.png');
+}
+.DoctrineOption.Artillery label{
+    background-image: url('../../assets/factions/doctrines/banners/artillery.png');
+}
+.DoctrineOption.Commandos label{
+    background-image: url('../../assets/factions/doctrines/banners/commandos.png');
+}
+.DoctrineOption.Engineers label{
+    background-image: url('../../assets/factions/doctrines/banners/engineers.png');
+}
+.DoctrineOption.Defensive label{
+    background-image: url('../../assets/factions/doctrines/banners/defensive.png');
+}
+.DoctrineOption.Blitz label{
+    background-image: url('../../assets/factions/doctrines/banners/blitz.png');
+}
+.DoctrineOption.Terror label{
+    background-image: url('../../assets/factions/doctrines/banners/terror.png');
+}
+.DoctrineOption.ScorchedEarth label{
+    background-image: url('../../assets/factions/doctrines/banners/scorched_earth.png');
+}
+.DoctrineOption.Luftwaffe label{
+    background-image: url('../../assets/factions/doctrines/banners/luftwaffe.png');
+}
+.DoctrineOption.TankHunters label{
+    background-image: url('../../assets/factions/doctrines/banners/tank_hunters.png');
+}
+

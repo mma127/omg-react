@@ -1,0 +1,7 @@
+.LayoutSegment {
+    padding-top: 0 !important;
+}
+
+.Content {
+    margin-top: 72px; /* 56px of the toolbar + 16px of styling */
+}

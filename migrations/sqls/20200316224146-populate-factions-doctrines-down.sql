@@ -1,0 +1,2 @@
+TRUNCATE TABLE doctrines;
+TRUNCATE TABLE factions;

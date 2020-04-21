@@ -1,0 +1,9 @@
+.Companies {
+    height: 100vh;
+    /* background-color: #1c242d; */
+}
+
+.Companies .Header {
+    padding-top: 30px;
+    padding-bottom: 30px;
+}

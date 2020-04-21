@@ -1,0 +1,20 @@
+{
+    "dev": {
+        "driver": "mysql",
+        "host": {
+            "ENV": "MYSQL_HOST"
+        },
+        "port": {
+            "ENV": "MYSQL_PORT"
+        },
+        "user": {
+            "ENV": "MYSQL_USER"
+        },
+        "password": {
+            "ENV": "MYSQL_PASSWORD"
+        },
+        "database": "omg",
+        "multipleStatements": true,
+        "sql-file" : true
+    }
+}
