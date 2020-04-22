@@ -29,7 +29,7 @@ export class Companies extends Component {
     render() {
         let companies = null,
             title = null;
-        if (this.props.isLoading) {
+        if (this.props.isLoading || this.props.isCreatingCompany) {
             companies = <Loader active />;
         } else if (this.props.isInitialized && this.props.companies.length === 0) {
             // Player has no companies created, show the companies creation flow
@@ -40,7 +40,7 @@ export class Companies extends Component {
         } else if (this.props.companies.length > 0) {
             // Player has companies, display them
             companies = this.props.companies.map(company => (
-                <Company key={company.id} name={company.displayName} doctrine={company.doctrine} companyType={company.type} />
+                <Company key={company.id} name={company.displayName} doctrine={company.Doctrine.name} companyType={company.type} />
             ))
             title = 'Companies';
         }

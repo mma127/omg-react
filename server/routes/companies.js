@@ -28,14 +28,19 @@ router.post('/', ensureAuthenticated, async function (req, res, next) {
 
     switch (companyType) {
         case 'WAR':
-            companyService.createWarCompanies(user, payload.alliedCompanyConfigs, payload.axisCompanyConfigs);
+            console.log('--- Creating war companies ---')
+            await companyService.createWarCompanies(
+                user, 
+                payload.alliedCompanyConfigs, 
+                payload.axisCompanyConfigs);
+            console.log('--- Finished creating war companies ---')
             break;
         case 'FUN':
         // TODO
         default:
             throw new Error(`Must have valid companyType, received ${companyType}`);
     }
-
+    console.log('--- Returning from POST war companies ---')
     res.end();
 });
 

@@ -12,7 +12,7 @@ import usersRouter from './routes/users';
 import authRouter from './routes/auth';
 import "core-js/stable";
 import "regenerator-runtime/runtime";
-import pool from './utils/pool';
+import models from './models/';
 
 import logger, { stream } from './utils/logger';
 import { APP_DOMAIN, ENVIRONMENT, IS_PRODUCTION, SESSION_SECRET, STEAM_API_KEY } from './utils/secrets';
@@ -39,25 +39,33 @@ passport.deserializeUser(function (obj, done) {
 //   Strategies in passport require a `validate` function, which accept
 //   credentials (in this case, an OpenID identifier and profile), and invoke a
 //   callback with a user object.
-passport.use(new Strategy({
-    returnURL: APP_DOMAIN + "/api/auth/steam/return",
-    realm: APP_DOMAIN,
-    apiKey: STEAM_API_KEY
-},
-    async function (identifier, profile, done) {
-        let [rows] = await pool.query('SELECT * FROM players where ?', { open_id: profile.id })
-        if (rows[0]) {
-            return done(undefined, rows[0]);
-        } else {
-            // If we can't find a player with the given Steam OpenID, create a new player with the provided Steam OpenID, display name, and avatar.
-            let sql = 'INSERT INTO players (display_name, open_id, avatar) VALUES (?, ?, ?)';
-            const inserts = [profile.displayName, profile.id, profile._json.avatarmedium];
-            sql = mysql.format(sql, inserts);
-            let [result] = await pool.query(sql);
-            logger.log("debug", `Inserted new player at id ${result.insertId} with name ${profile.display_name}`);
-            [rows] = await pool.query(`SELECT * from players where ?`, { id: result.insertId });
-            return done(undefined, rows[0]);
-        }
+passport.use(
+    new Strategy({
+        returnURL: APP_DOMAIN + "/api/auth/steam/return",
+        realm: APP_DOMAIN,
+        apiKey: STEAM_API_KEY
+    },
+    function (identifier, profile, done) {
+        models.Player.findOrCreate({where: {openId: profile.id}, defaults: {displayName: profile.displayName, avatar: profile._json.avatarmedium}})
+        .then(([player,created]) => {
+            if (created) {
+                console.log('Created new Player')
+                console.log(player.get({plain: true}));
+            } else {
+                // Check if name/avatar have changed
+                if (profile.displayName !== player.displayName) {
+                    player.displayName = profile.displayName;
+                }
+                if (profile._json.avatarmedium !== player.avatar) {
+                    player.avatar = profile._json.avatarmedium;
+                }
+                player.lastActive = new Date();
+                player.save();
+            }
+
+            // TODO update player with new name/avatar if changed
+            return done(undefined, player);
+        });
     }
 ));
 

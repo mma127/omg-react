@@ -1,14 +1,13 @@
 import "regenerator-runtime/runtime";
 import pool from '../utils/pool';
+import sequelize from '../utils/sequelize';
+import models from '../models';
 
 
 export const getDoctrineByName = async (name) => {
-    let [result] = await pool.query(
-        'SELECT * FROM doctrines where name = ?',
-        [name]
-    );
+    const result = await models.Doctrine.findOne({where: {name: name}});
 
-    return result[0];
+    return result;
 }
 
 export const getDoctrineById = async (id) => {

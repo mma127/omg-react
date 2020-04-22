@@ -10,6 +10,7 @@ export const IS_PRODUCTION = ENVIRONMENT === "production"; // Else dev
 export const SESSION_SECRET = process.env["SESSION_SECRET"]; // TODO use this?
 export const STEAM_API_KEY = process.env["STEAM_API_KEY"];
 export const APP_DOMAIN = process.env["APP_DOMAIN"] + ":" + (IS_PRODUCTION ? process.env["PROD_PORT"] : process.env["DEV_PORT"]);
+export const MYSQL_DATABASE = 'omg';
 export const MYSQL_HOST = process.env["MYSQL_HOST"];
 export const MYSQL_PORT = process.env["MYSQL_PORT"];
 export const MYSQL_USER = process.env["MYSQL_USER"];

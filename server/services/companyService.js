@@ -1,5 +1,7 @@
 import "regenerator-runtime/runtime";
-import pool from '../utils/pool';
+// import pool from '../utils/pool';
+import sequelize from '../utils/sequelize';
+import models from '../models';
 import * as doctrineService from './doctrineService';
 import { keysToCamel } from '../utils/parsing';
 
@@ -14,19 +16,22 @@ export const getWarCompanies = async (player) => {
     /**
      * Retrieve all ACTIVE WAR companies for the player.
      */
-    let [result] = await pool.query(
-        'SELECT * FROM companies JOIN players_companies pc on companies.id = pc.company_id where pc.player_id = ?', [player.id]);
+    console.log('Start get companies');
+    let result = await models.Company.findAll({
+        where: {            
+            PlayerId: player.id
+        },
+        include: [{
+            model: models.Doctrine
+        }]
+    })
     
     console.log('getWarCompanies Query result: ', result);
 
-    const doctrinesById = await doctrineService.getDoctrinesById();
-
-    let companies = result.map((company) => {
-        const doctrine = doctrinesById[company.doctrine_id];
-        company.doctrine = doctrine.name;
-        return keysToCamel(company);
-    });
-    return companies;
+    if (result.length === 0) {
+        return [];
+    }
+    return result;
 }
 
 export const createWarCompanies = async (player, alliedCompanyConfigs, axisCompanyConfigs) => {
@@ -34,18 +39,20 @@ export const createWarCompanies = async (player, alliedCompanyConfigs, axisCompa
      * Creates allied and axis war companies for the player. Verifies that the player is eligible
      * to create the given companies.
      */
-    let [companies] = await pool.query(
-        `SELECT * FROM companies JOIN players_companies pc ON companies.id = pc.company_id 
-            WHERE pc.player_id = ${player.id} and companies.status = 'ACTIVE' and pc.company_type = 'WAR';`
-    )
+    let companies = await models.Company.findAll({
+        where: {status: 'ACTIVE', RulesetId: 1}, 
+        include: [{
+            model: models.Player,
+            where: {
+                id: player.id
+            },
+            required: true
+        }]
+    });
 
-    let [alliedFactions] = await pool.query(
-        `SELECT * FROM factions WHERE side = 'ALLIED'`
-    )
+    let alliedFactions = await models.Faction.findAll({where: {side: 'ALLIED'}});
 
-    let [axisFactions] = await pool.query(
-        `SELECT * FROM factions WHERE side = 'AXIS'`
-    )
+    let axisFactions = await models.Faction.findAll({where: {side: 'AXIS'}});
 
     const existingAlliedCount = 0,
         existingAxisCount = 0,
@@ -53,12 +60,12 @@ export const createWarCompanies = async (player, alliedCompanyConfigs, axisCompa
         axisFactionIds = axisFactions.map(f => f.id);
 
     for (let company in companies) {
-        if (alliedFactionIds.contains(company.faction_id)) {
+        if (alliedFactionIds.contains(company.factionId)) {
             existingAlliedCount += 1;
-        } else if (axisFactionIds.contains(company.faction_id)) {
+        } else if (axisFactionIds.contains(company.factionId)) {
             existingAxisCount += 1;
         } else {
-            throw new Error(`Unrecognized faction id: ${company.faction_id}`);
+            throw new Error(`Unrecognized faction id: ${company.factionId}`);
         }
     }
 
@@ -74,31 +81,27 @@ export const createWarCompanies = async (player, alliedCompanyConfigs, axisCompa
     }
 
     // Player is all clear, can create these companies.
-    alliedCompanyConfigs.concat(axisCompanyConfigs).forEach(companyConfig => {
-        createCompany(player, companyConfig, 'WAR');
-    })
+    const companyConfigs = alliedCompanyConfigs.concat(axisCompanyConfigs);
+    for (const companyConfig of companyConfigs) {
+        await createCompany(player, companyConfig, 'WAR');
+    }
 }
 
 export const createCompany = async (player, companyConfig, companyType) => {
     const doctrine = await doctrineService.getDoctrineByName(companyConfig.doctrine);
 
-    console.log(`INSERT INTO companies (display_name, type, faction_id, doctrine_id, manpower, munitions, fuel) 
-    VALUES ('${companyConfig.name}', '${companyType}', ${doctrine.faction_id}, ${doctrine.id}, 
-            ${STARTING_MP}, ${STARTING_MU}, ${STARTING_FU})`)
-    // Insert into companies
-    let [company] = await pool.query(
-        `INSERT INTO companies (display_name, type, faction_id, doctrine_id, manpower, munitions, fuel) 
-            VALUES ('${companyConfig.name}', '${companyType}', ${doctrine.faction_id}, ${doctrine.id}, 
-                    ${STARTING_MP}, ${STARTING_MU}, ${STARTING_FU})`,
-    );
+    const company = await models.Company.create({
+        displayName: companyConfig.name, 
+        PlayerId: player.id,
+        FactionId: doctrine.FactionId,
+        DoctrineId: doctrine.id,
+        RulesetId: 1, // Update this to use constant or db
+        manpower: STARTING_MP,
+        munitions: STARTING_MU,
+        fuel: STARTING_FU
+    })
+    console.log('CREATED COMPANY:');
+    console.log(company);
 
-    console.log(`INSERT INTO players_companies (player_id, company_id, company_type) 
-        VALUES (${player.id}, ${company.insertId}, '${companyType}')`);
-    // Insert into players_companies
-    let [result] = await pool.query(
-        `INSERT INTO players_companies (player_id, company_id, company_type) 
-            VALUES (${player.id}, ${company.insertId}, '${companyType}')`,
-    );
-
-    return result;
+    return company;
 }

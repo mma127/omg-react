@@ -34,11 +34,11 @@ export const postCompaniesStart = () => {
 }
 export const postCompaniesSuccess = (companies) => {
     return dispatch => {
+        dispatch(getCompanies());
         dispatch({
             type: actionTypes.POST_COMPANIES_SUCCESS,
             companies: companies
         });
-        dispatch(getCompanies());
     }
 }
 export const postCompaniesFail = error => {

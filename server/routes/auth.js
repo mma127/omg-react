@@ -9,6 +9,11 @@ const router = express.Router();
 // const REDIRECT_URL = IS_PRODUCTION ? '/' : 'https://localhost:3000/';
 const REDIRECT_URL = APP_DOMAIN;
 
+function use_originalurl(req, res, next){
+    req.url = req.originalUrl;
+    next();
+}
+
 router.get('/user', ensureAuthenticated, (req, res) => {
     // Return the authenticated user, if available, else null
     res.send(JSON.stringify(keysToCamel(req.user)));
@@ -32,6 +37,10 @@ router.get("/steam", passport.authenticate("steam"), (req, res) => {
 //   which, in this example, will redirect the user to the home page.
 router.get(
     "/steam/return",
+    function(req, res, next){
+        req.url = req.originalUrl;
+        next();
+    },
     passport.authenticate("steam", { failureRedirect: '/failed_login', session: true }),
     (req, res) => {
         res.redirect(REDIRECT_URL);
