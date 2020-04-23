@@ -9,11 +9,6 @@ const router = express.Router();
 // const REDIRECT_URL = IS_PRODUCTION ? '/' : 'https://localhost:3000/';
 const REDIRECT_URL = APP_DOMAIN;
 
-function use_originalurl(req, res, next){
-    req.url = req.originalUrl;
-    next();
-}
-
 router.get('/user', ensureAuthenticated, (req, res) => {
     // Return the authenticated user, if available, else null
     res.send(JSON.stringify(keysToCamel(req.user)));

@@ -1,9 +1,8 @@
+import logger from '../utils/logger';
 import "regenerator-runtime/runtime";
-// import pool from '../utils/pool';
 import sequelize from '../utils/sequelize';
 import models from '../models';
 import * as doctrineService from './doctrineService';
-import { keysToCamel } from '../utils/parsing';
 
 const STARTING_MP = 9000;
 const STARTING_MU = 1800;
@@ -16,21 +15,18 @@ export const getWarCompanies = async (player) => {
     /**
      * Retrieve all ACTIVE WAR companies for the player.
      */
-    console.log('Start get companies');
+    logger.log('debug', 'Start GET companies');
     let result = await models.Company.findAll({
-        where: {            
+        where: {
             PlayerId: player.id
         },
         include: [{
             model: models.Doctrine
         }]
     })
-    
-    console.log('getWarCompanies Query result: ', result);
 
-    if (result.length === 0) {
-        return [];
-    }
+    logger.log('debug', 'getWarCompanies Query result: ', result);
+
     return result;
 }
 
@@ -39,8 +35,9 @@ export const createWarCompanies = async (player, alliedCompanyConfigs, axisCompa
      * Creates allied and axis war companies for the player. Verifies that the player is eligible
      * to create the given companies.
      */
+    logger.log('debug', `CreateWarCompanies: checking existing companies for player ${player.id}`);
     let companies = await models.Company.findAll({
-        where: {status: 'ACTIVE', RulesetId: 1}, 
+        where: { status: 'ACTIVE', RulesetId: 1 },
         include: [{
             model: models.Player,
             where: {
@@ -50,9 +47,9 @@ export const createWarCompanies = async (player, alliedCompanyConfigs, axisCompa
         }]
     });
 
-    let alliedFactions = await models.Faction.findAll({where: {side: 'ALLIED'}});
+    let alliedFactions = await models.Faction.findAll({ where: { side: 'ALLIED' } });
 
-    let axisFactions = await models.Faction.findAll({where: {side: 'AXIS'}});
+    let axisFactions = await models.Faction.findAll({ where: { side: 'AXIS' } });
 
     const existingAlliedCount = 0,
         existingAxisCount = 0,
@@ -80,6 +77,7 @@ export const createWarCompanies = async (player, alliedCompanyConfigs, axisCompa
             Have ${existingAxisCount} existing, ${axisCompanyConfigs.length} requested, ${MAX_WAR_COMPANIES_PER_SIDE} max`);
     }
 
+    logger.log('debug', `Player ${player.id} is clear to create war companies`);
     // Player is all clear, can create these companies.
     const companyConfigs = alliedCompanyConfigs.concat(axisCompanyConfigs);
     for (const companyConfig of companyConfigs) {
@@ -88,20 +86,21 @@ export const createWarCompanies = async (player, alliedCompanyConfigs, axisCompa
 }
 
 export const createCompany = async (player, companyConfig, companyType) => {
+    logger.log('debug', `Creating company for ${player.id} with name [${companyConfig.name}], 
+    doctrine ${companyConfig.doctrine}`);
     const doctrine = await doctrineService.getDoctrineByName(companyConfig.doctrine);
 
     const company = await models.Company.create({
-        displayName: companyConfig.name, 
+        displayName: companyConfig.name,
         PlayerId: player.id,
         FactionId: doctrine.FactionId,
         DoctrineId: doctrine.id,
-        RulesetId: 1, // Update this to use constant or db
+        RulesetId: 1, // TODO Update this to use constant or db
         manpower: STARTING_MP,
         munitions: STARTING_MU,
         fuel: STARTING_FU
     })
-    console.log('CREATED COMPANY:');
-    console.log(company);
+    logger.log('debug', `CREATED COMPANY: ${company}`);
 
     return company;
 }

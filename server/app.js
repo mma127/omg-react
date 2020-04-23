@@ -40,34 +40,48 @@ passport.deserializeUser(function (obj, done) {
 //   credentials (in this case, an OpenID identifier and profile), and invoke a
 //   callback with a user object.
 passport.use(
-    new Strategy({
-        returnURL: APP_DOMAIN + "/api/auth/steam/return",
-        realm: APP_DOMAIN,
-        apiKey: STEAM_API_KEY
-    },
-    function (identifier, profile, done) {
-        models.Player.findOrCreate({where: {openId: profile.id}, defaults: {displayName: profile.displayName, avatar: profile._json.avatarmedium}})
-        .then(([player,created]) => {
-            if (created) {
-                console.log('Created new Player')
-                console.log(player.get({plain: true}));
-            } else {
-                // Check if name/avatar have changed
-                if (profile.displayName !== player.displayName) {
-                    player.displayName = profile.displayName;
-                }
-                if (profile._json.avatarmedium !== player.avatar) {
-                    player.avatar = profile._json.avatarmedium;
-                }
-                player.lastActive = new Date();
-                player.save();
-            }
+    new Strategy(
+        {
+            returnURL: APP_DOMAIN + "/api/auth/steam/return",
+            realm: APP_DOMAIN,
+            apiKey: STEAM_API_KEY
+        },
+        function (identifier, profile, done) {
+            // On successful authentication from the OpenID source, 
+            // attempt to find the corresponding Player record using the openId token.
+            // If not found, create a new Player.
+            // Always check to update the player name and avatar
+            models.Player.findOrCreate(
+                {
+                    where: {
+                        openId: profile.id
+                    },
+                    defaults: {
+                        displayName: profile.displayName,
+                        avatar: profile._json.avatarmedium
+                    }
+                })
+                .then(([player, created]) => {
+                    if (created) {
+                        console.log('Created new Player')
+                        console.log(player.get({ plain: true }));
+                    } else {
+                        // Check if name/avatar have changed
+                        if (profile.displayName !== player.displayName) {
+                            player.displayName = profile.displayName;
+                        }
+                        if (profile._json.avatarmedium !== player.avatar) {
+                            player.avatar = profile._json.avatarmedium;
+                        }
+                        player.lastActive = new Date(); // TODO not enough if the user is logged in for a long time
+                        player.save();
+                    }
 
-            // TODO update player with new name/avatar if changed
-            return done(undefined, player);
-        });
-    }
-));
+                    // TODO update player with new name/avatar if changed
+                    return done(undefined, player);
+                });
+        }
+    ));
 
 const app = express();
 
@@ -88,9 +102,9 @@ if (IS_PRODUCTION) {
 }
 app.use(session(sess));
 
-session.Session.prototype.login = function(user, cb) {
+session.Session.prototype.login = function (user, cb) {
     const req = this.req;
-    req.session.regenerate(function(err){
+    req.session.regenerate(function (err) {
         if (err) {
             cb(err);
         }
@@ -125,12 +139,12 @@ app.use('/api', apiRouter);
 app.use(express.static(path.join(__dirname, '../client/build')));
 
 /* Catch all route */
-app.get('/*', function(req, res) {
-    res.sendFile(path.join(__dirname, '../client/build/index.html'), function(err) {
-      if (err) {
-        res.status(500).send(err)
-      }
+app.get('/*', function (req, res) {
+    res.sendFile(path.join(__dirname, '../client/build/index.html'), function (err) {
+        if (err) {
+            res.status(500).send(err)
+        }
     })
-  })
+})
 
 export default app;

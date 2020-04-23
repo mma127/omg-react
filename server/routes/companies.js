@@ -1,5 +1,6 @@
 import "regenerator-runtime/runtime";
 import express from 'express';
+import logger from '../utils/logger';
 import { ensureAuthenticated } from '../utils/passport';
 
 import * as companyService from '../services/companyService';
@@ -28,19 +29,19 @@ router.post('/', ensureAuthenticated, async function (req, res, next) {
 
     switch (companyType) {
         case 'WAR':
-            console.log('--- Creating war companies ---')
+            logger.log('debug', '--- Creating war companies ---');
             await companyService.createWarCompanies(
                 user, 
                 payload.alliedCompanyConfigs, 
                 payload.axisCompanyConfigs);
-            console.log('--- Finished creating war companies ---')
+            logger.log('debug', '--- Finished creating war companies ---')
             break;
         case 'FUN':
         // TODO
         default:
             throw new Error(`Must have valid companyType, received ${companyType}`);
     }
-    console.log('--- Returning from POST war companies ---')
+    logger.log('debug', '--- Returning from POST war companies ---');
     res.end();
 });
 
