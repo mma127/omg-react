@@ -32,6 +32,10 @@ router.get("/steam", passport.authenticate("steam"), (req, res) => {
 //   which, in this example, will redirect the user to the home page.
 router.get(
     "/steam/return",
+    function(req, res, next){
+        req.url = req.originalUrl;
+        next();
+    },
     passport.authenticate("steam", { failureRedirect: '/failed_login', session: true }),
     (req, res) => {
         res.redirect(REDIRECT_URL);
