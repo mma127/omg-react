@@ -56,7 +56,7 @@
     "rimraf": "^3.0.2",
     "sequelize": "^5.21.6",
     "sequelize-cli": "^5.5.1",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "steam-web": "^0.7.0",
     "winston": "^3.2.1"
   },
